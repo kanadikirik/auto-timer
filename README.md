@@ -9,9 +9,15 @@ In this application, there is no need click anywhere for start or stop the timer
 * Start timer (keep the phone upright)
 * Stop timer (put the phone to the straight surface)
 * Available or not (Toggle the switch for make timer available)
+* Save timer datas
 
 ## toDos
 - [ ] Start and stop timer with voice command
-- [ ] Save timer history to AsyncStorage
-- [ ] Show timer history in home page
+- [x] Save timer history to AsyncStorage
+- [x] Show timer history in home page
+- [ ] Get alias for TimerData from user before save TimerData
+- [ ] Update history state after save new TimerData
+- [ ] Delete TimerData
+- [ ] Edit TimerData's alias
+- [ ] Edit History UI
 - [ ] Add Turkish language support
