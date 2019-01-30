@@ -6,8 +6,9 @@ In this application, there is no need click anywhere for start or stop the timer
 **(Turkish)** Bu uygulamada zamanlayıcıyı başlatmak veya durdurmak için bir yere tıklamaya gerek yok. Zamanlayıcıyı başlatmak için tek yapmanız gereken telefonu düz bir yüzeye koymak ve durdurmak için tek yapmanız gereken ise telefonu dik tutmak.
 
 ## Features
-* Start timer ( keep the phone upright)
+* Start timer (keep the phone upright)
 * Stop timer (put the phone to the straight surface)
+* Available or not (Toggle the switch for make timer available)
 
 ## toDos
 - [ ] Start and stop timer with voice command
