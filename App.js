@@ -1,40 +1,44 @@
 import React, { Component } from 'react'
-import { StyleSheet, Text, View, StatusBar, Switch, TouchableOpacity, AsyncStorage } from 'react-native';
-import { Feather, Ionicons } from '@expo/vector-icons';
-import { Accelerometer } from 'expo';
-
-// Model
-import { TimerData } from './models/TimerData';
+import { StyleSheet, Text, View, StatusBar, TouchableOpacity, Dimensions } from 'react-native';
+import { Accelerometer } from 'expo-sensors';
 // Components
+import Info from './components/Info';
 import History from './components/History';
+import Loading from './components/Loading';
+// Constants && Service && Style
+import { addToHistory } from './services/HistoryService';
+import { TimerData } from './models/TimerData';
+import { STATUS, PAGE } from './services/constants';
+import { Feather } from '@expo/vector-icons';
+import { STYLE } from './services/style';
 
 export default class App extends Component {
+
+  constructor(props){
+    super(props)
+    StatusBar.setHidden(true)
+    this.info = React.createRef()
+    this.width = Dimensions.get('window').width
+    this.height = Dimensions.get('window').height
+  }
+
   state = {
+    status: STATUS.LOADING,
+    darkMode: true,
     accelerometerData: {},
     second: 0,
     isTimerActive: false,
-    isTimerAvailable: true,
-    history: {
-      isLoaded: false,
-      data: [],
-      error: false,
-    }
+    isHistoryVisible: false,
+    activePage: PAGE.TIMER
   }
 
   componentDidMount = async () => {
-    this._subscribe();
-    this._loadHistory();
-  }
-  
-  _loadHistory = async () => {
-    let history  = this.state.history;
-    const historyData = await TimerData.get();
-    historyData ? history.data = historyData : history.error = true;
-    history.isLoaded = true;
-    this.setState({ history })
+    await this._subscribe();
+    this.setState({ status: STATUS.NORMAL })
+    this.createMessage = this.info.current.createMessage
   }
 
-  componentWillUnmount() {
+  componentWillUnmount = () => {
     this._unsubscribe();
   }
 
@@ -48,8 +52,8 @@ export default class App extends Component {
     if(z > 0.9 || z < -0.9){
       if(!this.state.isTimerActive)
         this._startTimer();
-    } else 
-        this._stopTimer();
+    } 
+    else this._stopTimer();
   }
 
   _startTimer = () => {
@@ -64,66 +68,69 @@ export default class App extends Component {
     this.setState({ isTimerActive: false });
   }
 
-  _resetTimer = () => {
-    this.setState({ second: 0 });
-  }
+  _resetTimer = () => { this.setState({ second: 0 }) }
 
   _unsubscribe = () => {
     this._stopTimer();
     this._subscription && this._subscription.remove();
     this._subscription = null;
   }
-
-  _handleTimerAvailable = () => {
-    let { isTimerAvailable } = this.state;
-    isTimerAvailable ? this._unsubscribe() : this._subscribe();
-    this.setState({ isTimerAvailable: !isTimerAvailable });
-  }
-
+  
   _saveTimerData = async () => {
-    const saveStatus = await TimerData.save(this.state.second, "ook0", new Date());
+    const timerData = new TimerData(this.state.second, new Date())
+    addToHistory(timerData).then(() => {
+      this.createMessage("Timer data added to history successfullyy", STATUS.SUCCESS)        
+    })
+    .catch(() => this.createMessage("Error while adding timer data to history", STATUS.ERROR))
   }
+
+  _handleDarkMode = () => this.setState({ darkMode: !this.state.darkMode })
+  _handleHistoryVisible = () => this.setState({ isHistoryVisible: !this.state.isHistoryVisible })
 
   render() {
-    let { isTimerAvailable, isTimerActive, second, history } = this.state;
+    let { status, darkMode, isTimerActive, second, isHistoryVisible } = this.state;
 
-    if(isTimerAvailable){
-      if(isTimerActive)
-        this.informationMessage = <Text>Keep the phone <Text style={styles.fwBold}>upright</Text> for <Text style={styles.fwBold}>stop</Text> the timer</Text>
-      else 
-        this.informationMessage = <Text>Put the phone to the <Text style={styles.fwBold}>straight</Text> surface for <Text style={styles.fwBold}>start</Text> the timer</Text>
-    } else {
-      this.informationMessage = <Text><Text style={styles.fwBold}>Toggle the switch</Text> for make timer available</Text>
-    }
+    if(status === STATUS.LOADING) return <Loading />
 
     return (
-      <View style={styles.container}>
-        <StatusBar hidden />
-        <View style={styles.header}>
-          <Text style={styles.headText}>Auto Timer</Text>
-          <Switch value={isTimerAvailable} onValueChange={this._handleTimerAvailable} style={styles.switch} />
+      <View style={[styles.container, darkMode ? STYLE.BG_DARK : STYLE.BG_WHITE]}>
+        <Info ref={this.info} />
+        <View style={[{ width: this.width, flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingTop: this.height*.05, paddingHorizontal: this.width*.05 }]}>
+          <Text style={[styles.headText, darkMode ? STYLE.WHITE : STYLE.DARK]}>Auto Timer</Text>
+          <TouchableOpacity onPress={this._handleDarkMode} style={[ darkMode ? STYLE.BG_WHITE : STYLE.BG_DARK, { paddingHorizontal: 5, paddingVertical: 3, borderRadius: 5 } ]}>
+            <Text style={[darkMode ? STYLE.DARK : STYLE.WHITE, STYLE.BOLD]}>{ darkMode ? "Light mode" : "Dark mode" }</Text>
+          </TouchableOpacity>
         </View>
-        <View>
-          <View style={styles.timeContainer}>
-            <Text style={styles.timeText}>{TimerData.configureTime(second)}</Text>
-            <View style={styles.timeContainerIcons}>
-              <TouchableOpacity onPress={this._resetTimer} style={styles.iconLeft}>
-                <Feather name="trash-2" size={32} style={styles.red} />
-              </TouchableOpacity>
-              <TouchableOpacity onPress={this._saveTimerData}>
-                <Feather name="bookmark" size={32} style={styles.blue} />
-              </TouchableOpacity>
-            </View>
-          </View>
-          <View style={styles.timerInformation}>
-            <Ionicons name="ios-information" size={32} style={[styles.iconLeft, styles.blue]} />
-            <Text>{this.informationMessage}</Text>
-          </View>
+        <View style={{ paddingHorizontal: this.height*.025 }}>
+          <Text style={[styles.timeText, darkMode ? STYLE.WHITE : STYLE.DARK ]}>{TimerData.configureTime(second)}</Text>
+          <Text style={[darkMode ? STYLE.WHITE : STYLE.DARK, STYLE.TA_CENTER]}>
+            { 
+              isTimerActive
+              ? <Text>Keep the phone <Text style={STYLE.BOLD}>upright</Text> for <Text style={STYLE.BOLD}>stop</Text> the timer</Text>
+              : <Text>Put the phone to the <Text style={STYLE.BOLD}>straight</Text> surface for <Text style={STYLE.BOLD}>start</Text> the timer</Text>
+            }
+          </Text>
         </View>
-        { 
-          history.isLoaded 
-          ? <History data={history.data} />
-          : <Text>Loading</Text>
+        <View style={[styles.menu, STYLE.SPACE(this.width, this.height), { width: this.width }]}>
+          <TouchableOpacity onPress={this._handleHistoryVisible}>
+            <Feather name="clock" size={28} style={[STYLE.BLUE, styles.iconLeft]} />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={this._saveTimerData}>
+            <Feather name="bookmark" size={28} style={[STYLE.GREEN, styles.iconLeft]} />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={this._resetTimer}>
+            <Feather name="trash" size={28} style={[STYLE.RED, styles.iconLeft]} />
+          </TouchableOpacity>
+        </View>
+        
+        { (isHistoryVisible && status === STATUS.NORMAL) && 
+          <History 
+            width            = {this.width} 
+            height           = {this.height} 
+            darkMode         = {darkMode} 
+            createMessage    = {this.createMessage} 
+            handleVisibility = { this._handleHistoryVisible }
+          />
         }
       </View>
     );
@@ -133,18 +140,13 @@ export default class App extends Component {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'stretch',
-    padding: 20
+    alignItems: 'center',
+    justifyContent: "space-between",
   },
   header: {
     flexDirection: 'row',
     alignItems:'center',
     justifyContent: 'space-between'
-  },
-  timeContainer:{
-    flexDirection:'row',
-    alignItems:'center',
-    justifyContent:'space-between',
   },
   timeContainerIcons:{
     flexDirection:'row',
@@ -153,29 +155,16 @@ const styles = StyleSheet.create({
   headText:{
     fontSize: 25,
     fontWeight: 'bold',
-    textAlign: 'center'    
+    textAlign: 'center',
   },
   timeText:{
-    fontSize: 22,
-    textAlign: 'center'
+    fontSize: 45,
+    textAlign: 'center',
   },
-  timerInformation:{
-    flexDirection:'row',
-    alignItems:'center',
+  menu: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: "space-around",
   },
-  switch:{
-    transform: [{scale: 1.3}]
-  },
-  iconLeft:{
-    marginRight: 15,
-  },
-  fwBold:{
-    fontWeight: 'bold',
-  },
-  red:{
-    color: '#F24236',
-  },
-  blue:{
-    color: '#3A86FF',
-  }
+  iconLeft  : { marginRight: 10 },
 });
