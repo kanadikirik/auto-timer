@@ -12,6 +12,26 @@ In this application, there is no need click anywhere for start or stop the timer
 * Save timer data to history
 * Edit timer datas in history
 
+## Installing
+First, clone repository.
+```
+git clone https://github.com/ook0/auto-timer.git
+```
+Go directory
+```
+cd auto-timer
+```
+Then install dependencies.
+```
+npm install
+```
+
+## Start
+For development:
+```
+npm start
+```
+
 ## toDos
 - [ ] Start and stop timer with voice command
 - [ ] Add Turkish language support
