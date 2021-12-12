@@ -1,21 +1,25 @@
-import React, { Component } from 'react'
-import { Text, View, Modal, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native'
+import React, { Component } from "react";
+import { Text, View, StyleSheet, ActivityIndicator } from "react-native";
 
 export default class Loading extends Component {
   render() {
     return (
       <View style={styles.loading}>
         <View style={styles.loadingContent}>
-          <ActivityIndicator size="large" color="#0000ff" style={{ marginBottom: 10 }} />
-          <Text style={{ color: "black"}}>Loading..</Text>
+          <ActivityIndicator
+            size="large"
+            color="#0000ff"
+            style={{ marginBottom: 10 }}
+          />
+          <Text style={{ color: "black" }}>Loading..</Text>
         </View>
       </View>
-    )
+    );
   }
 }
 
 const styles = StyleSheet.create({
-  loading:{
+  loading: {
     position: "absolute",
     width: "100%",
     height: "100%",
@@ -23,11 +27,11 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,.5)",
     zIndex: 999999,
     alignItems: "center",
-    justifyContent: "center"
+    justifyContent: "center",
   },
-  loadingContent:{
+  loadingContent: {
     backgroundColor: "white",
     padding: 30,
     borderRadius: 10,
-  }
+  },
 });

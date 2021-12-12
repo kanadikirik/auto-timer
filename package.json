@@ -7,15 +7,15 @@
     "eject": "expo eject"
   },
   "dependencies": {
-    "expo": "^33.0.0",
-    "expo-sensors": "^5.0.1",
+    "expo": "^43.0.0",
+    "expo-sensors": "~11.0.3",
     "moment": "^2.24.0",
     "prop-types": "^15.6.2",
-    "react": "^16.8.6",
-    "react-native": "https://github.com/expo/react-native/archive/sdk-33.0.0.tar.gz"
+    "react": "17.0.1",
+    "react-native": "https://github.com/expo/react-native/archive/sdk-43.tar.gz"
   },
   "devDependencies": {
-    "babel-preset-expo": "^5.0.0"
+    "babel-preset-expo": "8.5.1"
   },
   "private": true
 }
