@@ -1,148 +1,110 @@
-import React, { Component } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Text, View, Modal, ScrollView, TouchableOpacity, StyleSheet } from 'react-native'
-import PropTypes from 'prop-types'
-// Components
 import Loading from './Loading'
-// Model
 import { TimerData } from '../models/TimerData'
-// Constants && Service && Style
-import { getHistory, setHistory } from '../services/HistoryService'
+import { getHistory, setHistory as setHistoryService } from '../services/HistoryService'
 import moment from 'moment'
 import { Feather } from '@expo/vector-icons'
-import { STYLE } from '../services/style'
+import { deviceHeight, deviceWidth, STYLE } from '../services/style'
 import { STATUS } from '../services/constants'
 
-export default class History extends Component {
-	static propTypes = {
-		width: PropTypes.number.isRequired,
-		height: PropTypes.number.isRequired,
-		darkMode: PropTypes.bool.isRequired,
-		handleVisibility: PropTypes.func.isRequired,
-		createMessage: PropTypes.func.isRequired,
+import { useInfoContext } from '../services/context/InfoContext'
+
+export default function History({ close }) {
+	const { createMessage } = useInfoContext()
+
+	const [status, setStatus] = useState(STATUS.LOADING)
+	const [history, setHistory] = useState([])
+
+	useEffect(() => {
+		load()
+	}, [])
+
+	const load = async () => {
+		await loadHistory()
+		setStatus(STATUS.NORMAL)
 	}
 
-	state = {
-		status: STATUS.LOADING,
-		history: [],
-	}
-
-	async componentDidMount() {
-		await this._loadHistory()
-		this.setState({ status: STATUS.NORMAL })
-	}
-
-	_loadHistory = async () => {
-		const { createMessage } = this.props
+	const loadHistory = async () => {
 		await getHistory()
-			.then(async history => {
-				await this.setState({ history })
-			})
+			.then(setHistory)
 			.catch(() => createMessage('Error while loading history', STATUS.ERROR))
 	}
 
-	_removeFromHistory = async index => {
-		await this.setState({ status: STATUS.LOADING })
-		const { history } = this.state
+	const removeFromHistory = async index => {
+		setStatus(STATUS.LOADING)
 		history.splice(index, 1)
-		await setHistory(history)
-			.then(async () => await this.setState({ history }))
+		await setHistoryService([...history])
+			.then(setHistory)
 			.catch(() =>
-				this.props.createMessage(
-					'Error while deleting timer data from history',
-					STATUS.ERROR,
-				),
+				createMessage('Error while deleting timer data from history', STATUS.ERROR),
 			)
-		this.setState({ status: STATUS.NORMAL })
+		setStatus(STATUS.NORMAL)
 	}
 
-	_clearHistory = async () => {
-		if (this.state.history.length !== 0) {
-			await this.setState({ status: STATUS.LOADING })
-			await setHistory([])
-				.then(async () => this.setState({ history: [] }))
-				.catch(() =>
-					this.props.createMessage('Error while clearing history', STATUS.ERROR),
-				)
-			this.setState({ status: STATUS.NORMAL })
+	const clearHistory = async () => {
+		if (history.length !== 0) {
+			setStatus(STATUS.LOADING)
+			await setHistoryService([])
+				.then(setHistory)
+				.catch(() => createMessage('Error while clearing history', STATUS.ERROR))
+			setStatus(STATUS.NORMAL)
 		}
 	}
 
-	render() {
-		const { width, height, darkMode, handleVisibility } = this.props
-		const { status, history } = this.state
-
-		return (
-			<Modal animationType="slide" transparent={false} style={{ margin: 0 }}>
-				{status === STATUS.LOADING && <Loading />}
+	return (
+		<Modal animationType="slide" transparent={false} style={{ margin: 0 }}>
+			{status === STATUS.LOADING && <Loading />}
+			<View style={[{ flex: 1 }, STYLE.BG_DARK, STYLE.SPACE(deviceWidth, deviceHeight)]}>
 				<View
-					style={[
-						{ flex: 1 },
-						darkMode ? STYLE.BG_DARK : STYLE.BG_WHITE,
-						STYLE.SPACE(width, height),
-					]}
+					style={{
+						flexDirection: 'row',
+						alignItems: 'center',
+						justifyContent: 'space-between',
+						marginBottom: deviceHeight * 0.05,
+					}}
 				>
-					<View
-						style={{
-							flexDirection: 'row',
-							alignItems: 'center',
-							justifyContent: 'space-between',
-							marginBottom: height * 0.05,
-						}}
-					>
-						<TouchableOpacity onPress={handleVisibility}>
-							<Feather
-								name="arrow-left"
-								style={darkMode ? STYLE.WHITE : STYLE.DARK}
-								size={24}
-							/>
-						</TouchableOpacity>
-						<Text style={[styles.headText, darkMode ? STYLE.WHITE : STYLE.DARK]}>
-							History
-						</Text>
-						<TouchableOpacity onPress={this._clearHistory}>
-							<Text style={darkMode ? STYLE.WHITE : STYLE.DARK}>Clear</Text>
-						</TouchableOpacity>
-					</View>
-					<ScrollView style={[]}>
-						{history.map((timerData, index) => {
-							return (
-								<View
-									key={timerData.date + timerData.second}
-									style={{
-										marginBottom: 20,
-										flexDirection: 'row',
-										alignItems: 'center',
-										justifyContent: 'space-between',
-									}}
-								>
-									<View>
-										<Text
-											style={[
-												darkMode ? STYLE.WHITE : STYLE.DARK,
-												STYLE.BOLD,
-												{ fontSize: 20, marginBottom: 5 },
-											]}
-										>
-											{TimerData.configureTime(timerData.second)}
-										</Text>
-										<Text style={darkMode ? STYLE.WHITE : STYLE.DARK}>
-											{moment(timerData.date).calendar()}
-										</Text>
-									</View>
-									<TouchableOpacity
-										style={[STYLE.BG_RED_SOFT, { padding: 5, borderRadius: 2.5 }]}
-										onPress={() => this._removeFromHistory(index)}
-									>
-										<Feather name="trash" size={22} style={[STYLE.WHITE]} />
-									</TouchableOpacity>
-								</View>
-							)
-						})}
-					</ScrollView>
+					<TouchableOpacity onPress={close}>
+						<Feather name="arrow-left" style={STYLE.WHITE} size={24} />
+					</TouchableOpacity>
+					<Text style={[styles.headText, STYLE.WHITE]}>History</Text>
+					<TouchableOpacity onPress={clearHistory}>
+						<Text style={STYLE.WHITE}>Clear</Text>
+					</TouchableOpacity>
 				</View>
-			</Modal>
-		)
-	}
+				<ScrollView style={[]}>
+					{history.map((timerData, index) => {
+						return (
+							<View
+								key={timerData.date + timerData.second}
+								style={{
+									marginBottom: 20,
+									flexDirection: 'row',
+									alignItems: 'center',
+									justifyContent: 'space-between',
+								}}
+							>
+								<View>
+									<Text
+										style={[STYLE.WHITE, STYLE.BOLD, { fontSize: 20, marginBottom: 5 }]}
+									>
+										{TimerData.configureTime(timerData.second)}
+									</Text>
+									<Text style={STYLE.WHITE}>{moment(timerData.date).calendar()}</Text>
+								</View>
+								<TouchableOpacity
+									style={[STYLE.BG_RED_SOFT, { padding: 5, borderRadius: 2.5 }]}
+									onPress={() => removeFromHistory(index)}
+								>
+									<Feather name="trash" size={22} style={[STYLE.WHITE]} />
+								</TouchableOpacity>
+							</View>
+						)
+					})}
+				</ScrollView>
+			</View>
+		</Modal>
+	)
 }
 
 const styles = StyleSheet.create({
