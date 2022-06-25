@@ -1,6 +1,6 @@
 import moment from 'moment'
-import React, { useEffect, useState } from 'react'
-import { View, Text, StyleSheet } from 'react-native'
+import React, { useEffect, useMemo, useState } from 'react'
+import { View, Text, StyleSheet, AppState } from 'react-native'
 import { TouchableOpacity } from 'react-native-gesture-handler'
 import { TimerData } from '../models/TimerData'
 import { STATUS } from '../services/constants'
@@ -30,7 +30,10 @@ export default function Timer() {
 		}
 	}, [])
 
-	const { isAppVisible } = useAppState()
+	const isAppVisible = useMemo(
+		() => AppState.currentState.match('active'),
+		[AppState.currentState],
+	)
 
 	useEffect(() => {
 		if (!isAppVisible && backgroundPreference === 'stop') {
