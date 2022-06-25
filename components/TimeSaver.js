@@ -3,15 +3,10 @@ import { View, Text, StyleSheet } from 'react-native'
 import BottomSheet from '@gorhom/bottom-sheet'
 import { COLOR, deviceHeight, deviceWidth, STYLE } from '../services/style'
 
-export default function TimeSaver({ timerData }) {
+export default function TimeSaver() {
 	const bottomSheetRef = useRef(null)
 
 	const snapPoints = useMemo(() => ['50%', '50%'], [])
-
-	// callbacks
-	const handleSheetChanges = useCallback(index => {
-		console.log('handleSheetChanges', index)
-	}, [])
 
 	return (
 		<View style={styles.container}>

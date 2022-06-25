@@ -8,7 +8,6 @@ import {
 	Image,
 } from 'react-native'
 import { COLOR, STYLE } from './services/style'
-import TimeSaver from './components/TimeSaver'
 import { Provider as PaperProvider } from 'react-native-paper'
 import Timer from './components/Timer'
 import InfoProvider from './components/provider/InfoProvider'
@@ -27,7 +26,6 @@ export default function App() {
 		<PaperProvider>
 			<InfoProvider>
 				<SettingsProvider>
-					{timeSaverVisible && <TimeSaver />}
 					<SafeAreaView style={[styles.container, STYLE.BG_DARK]}>
 						<View style={styles.header}>
 							<View style={styles.logo}>
