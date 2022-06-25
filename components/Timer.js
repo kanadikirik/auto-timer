@@ -10,9 +10,9 @@ import useInterval from '../services/hooks/useInterval'
 import { COLOR, deviceHeight, deviceWidth, STYLE } from '../services/style'
 import History from './History'
 import { Feather } from '@expo/vector-icons'
-import useAppState from '../services/hooks/useAppState'
 import { useInfoContext } from '../services/context/InfoContext'
 import { useSettingsContext } from '../services/context/SettingsContext'
+import { BACKGROUND_PREFERENCE_KEYS } from '../services/SettingsService'
 
 export default function Timer() {
 	const { createMessage } = useInfoContext()
@@ -36,7 +36,7 @@ export default function Timer() {
 	)
 
 	useEffect(() => {
-		if (!isAppVisible && backgroundPreference === 'stop') {
+		if (!isAppVisible && backgroundPreference === BACKGROUND_PREFERENCE_KEYS.STOP) {
 			stopTimer()
 		}
 	}, [isAppVisible])

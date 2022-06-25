@@ -4,14 +4,19 @@ const SETTING_KEYS = {
 	background: 'auto-timer-background-pref',
 }
 
+export const BACKGROUND_PREFERENCE_KEYS = {
+	STOP: 'stop',
+	KEEP: 'keep',
+}
+
 export const BACKGROUND_PREFERENCE_LIST = [
 	{
 		label: 'Stop the timer',
-		value: 'stop',
+		value: BACKGROUND_PREFERENCE_KEYS.STOP,
 	},
 	{
 		label: 'Keep active',
-		value: 'keep',
+		value: BACKGROUND_PREFERENCE_KEYS.KEEP,
 	},
 ]
 
